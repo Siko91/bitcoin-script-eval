@@ -1,5 +1,5 @@
 const evaluator = require("./evaluator");
-const bsv = require("./bsv");
+const bsv = require("bsv");
 
 async function parse(script, format) {
   if (format === "hex") return bsv.Script.fromHexString(script.toString());
@@ -9,7 +9,7 @@ async function parse(script, format) {
 
 async function eval(script, format, context = {}) {
   let parsedScript = null;
-  parsedScript = parse(script, format, context);
+  parsedScript = await parse(script, format, context);
   return await evaluator.eval(parsedScript, context);
 }
 
