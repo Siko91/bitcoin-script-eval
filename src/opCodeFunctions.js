@@ -3,7 +3,7 @@ const PROTOCOL_VERSION = hex("FFFFFFFF");
 const opCodeFunctions = {
   // Constants
   0: { name: "OP_0", eval: (ctx) => ctx.stack.push(hex("00")) },
-  79: { name: "OP_1NEGATE", eval: (ctx) => ctx.stack.push(hex("81")) }, // TODO: Figure out how to write hex -1
+  79: { name: "OP_1NEGATE", eval: (ctx) => ctx.stack.push(hex("81")) },
   81: { name: "OP_1", eval: (ctx) => ctx.stack.push(hex("01")) },
   82: { name: "OP_2", eval: (ctx) => ctx.stack.push(hex("02")) },
   83: { name: "OP_3", eval: (ctx) => ctx.stack.push(hex("03")) },
