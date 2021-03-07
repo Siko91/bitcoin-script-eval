@@ -332,7 +332,7 @@ const opCodeFunctions = {
     },
   },
   147: {
-    name: "OP_",
+    name: "OP_ADD",
     eval: (ctx) => {
       const nTop = bufToBn(pop(ctx.stack));
       const nTop2 = bufToBn(pop(ctx.stack));
