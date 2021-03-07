@@ -313,10 +313,7 @@ const opCodeFunctions = {
     name: "OP_NOT",
     eval: (ctx) => {
       const val = pop(ctx.stack);
-      let res = null;
-      if (val.length > 1) res = hex("00");
-      else if (val[0] === 0) res = hex("01");
-      else res = hex("00");
+      let res = is0(val) ? hex("01") : hex("00");
       ctx.stack.push(res);
     },
   },
@@ -324,10 +321,7 @@ const opCodeFunctions = {
     name: "OP_0NOTEQUAL",
     eval: (ctx) => {
       const val = pop(ctx.stack);
-      let res = null;
-      if (val.length > 1) res = hex("01");
-      else if (val[0] === 0) res = hex("00");
-      else res = hex("01");
+      let res = is0(val) ? hex("00") : hex("01");
       ctx.stack.push(res);
     },
   },
@@ -390,31 +384,188 @@ const opCodeFunctions = {
       throw new Error("NOT IMPLEMENTED!");
     },
   },
-  154: { name: "OP_", eval: (ctx) => {} },
-  155: { name: "OP_", eval: (ctx) => {} },
-  156: { name: "OP_", eval: (ctx) => {} },
-  157: { name: "OP_", eval: (ctx) => {} },
-  158: { name: "OP_", eval: (ctx) => {} },
-  159: { name: "OP_", eval: (ctx) => {} },
-  160: { name: "OP_", eval: (ctx) => {} },
-  161: { name: "OP_", eval: (ctx) => {} },
-  162: { name: "OP_", eval: (ctx) => {} },
-  163: { name: "OP_", eval: (ctx) => {} },
-  164: { name: "OP_", eval: (ctx) => {} },
-  165: { name: "OP_", eval: (ctx) => {} },
-  166: { name: "OP_", eval: (ctx) => {} },
-  167: { name: "OP_", eval: (ctx) => {} },
-  168: { name: "OP_", eval: (ctx) => {} },
-  169: { name: "OP_", eval: (ctx) => {} },
-  170: { name: "OP_", eval: (ctx) => {} },
-  171: { name: "OP_", eval: (ctx) => {} },
-  172: { name: "OP_", eval: (ctx) => {} },
-  173: { name: "OP_", eval: (ctx) => {} },
-  174: { name: "OP_", eval: (ctx) => {} },
-  175: { name: "OP_", eval: (ctx) => {} },
-  176: { name: "OP_", eval: (ctx) => {} },
-  177: { name: "OP_", eval: (ctx) => {} },
-  178: { name: "OP_", eval: (ctx) => {} },
+  154: {
+    name: "OP_BOOLAND",
+    eval: (ctx) => {
+      const top = !is0(pop(ctx.stack));
+      const top2 = !is0(pop(ctx.stack));
+      ctx.stack.push(top && top2 ? hex("01") : hex("00"));
+    },
+  },
+  155: {
+    name: "OP_BOOLOR",
+    eval: (ctx) => {
+      const top = !is0(pop(ctx.stack));
+      const top2 = !is0(pop(ctx.stack));
+      ctx.stack.push(top || top2 ? hex("01") : hex("00"));
+    },
+  },
+  156: {
+    name: "OP_NUMEQUAL",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.eq(nTop) ? hex("01") : hex("00"));
+    },
+  },
+  157: {
+    name: "OP_NUMEQUALVERIFY",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      if (!nTop2.eq(nTop)) endScript(ctx, "invalid");
+    },
+  },
+  158: {
+    name: "OP_NUMNOTEQUAL",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.eq(nTop) ? hex("00") : hex("01"));
+    },
+  },
+  159: {
+    name: "OP_LESSTHAN",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.lt(nTop) ? hex("01") : hex("00"));
+    },
+  },
+  160: {
+    name: "OP_GREATERTHAN",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.gt(nTop) ? hex("01") : hex("00"));
+    },
+  },
+  161: {
+    name: "OP_LESSTHANOREQUAL",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.leq(nTop) ? hex("01") : hex("00"));
+    },
+  },
+  162: {
+    name: "OP_GREATERTHANOREQUAL",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.geq(nTop) ? hex("01") : hex("00"));
+    },
+  },
+  163: {
+    name: "OP_MIN",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.leq(nTop) ? bnToBuf(nTop2) : bnToBuf(nTop));
+    },
+  },
+  164: {
+    name: "OP_MAX",
+    eval: (ctx) => {
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      ctx.stack.push(nTop2.geq(nTop) ? bnToBuf(nTop2) : bnToBuf(nTop));
+    },
+  },
+  165: {
+    name: "OP_WITHIN",
+    eval: (ctx) => {
+      const max = bufToBn(pop(ctx.stack));
+      const min = bufToBn(pop(ctx.stack));
+      const x = bufToBn(pop(ctx.stack));
+      const geq = x.geq(min);
+      const lt = x.lt(max);
+      ctx.stack.push(geq && lt ? hex("01") : hex("00"));
+    },
+  },
+
+  // Cryptography
+  166: {
+    name: "OP_RIPEMD160",
+    eval: (ctx) => {
+      const val = pop(ctx.stack);
+      ctx.stack.push(bsv.Hash.ripemd160(val));
+    },
+  },
+  167: {
+    name: "OP_SHA1",
+    eval: (ctx) => {
+      const val = pop(ctx.stack);
+      ctx.stack.push(bsv.Hash.sha1(val));
+    },
+  },
+  168: {
+    name: "OP_SHA256",
+    eval: (ctx) => {
+      const val = pop(ctx.stack);
+      ctx.stack.push(bsv.Hash.sha256(val));
+    },
+  },
+  169: {
+    name: "OP_HASH160",
+    eval: (ctx) => {
+      const val = pop(ctx.stack);
+      ctx.stack.push(bsv.Hash.sha256Ripemd160(val));
+    },
+  },
+  170: {
+    name: "OP_HASH256",
+    eval: (ctx) => {
+      const val = pop(ctx.stack);
+      ctx.stack.push(bsv.Hash.sha256Sha256(val));
+    },
+  },
+  171: {
+    name: "OP_CODESEPARATOR",
+    eval: (ctx) => {
+      // nothing
+    },
+  },
+  172: {
+    name: "OP_CHECKSIG",
+    eval: (ctx) => {
+      // TODO: Implement sig mocking
+      throw new Error("NOT IMPLEMENTED!");
+    },
+  },
+  173: {
+    name: "OP_CHECKSIGVERIFY",
+    eval: (ctx) => {
+      // TODO: Implement sig mocking
+      throw new Error("NOT IMPLEMENTED!");
+    },
+  },
+  174: {
+    name: "OP_CHECKMULTISIG",
+    eval: (ctx) => {
+      // TODO: Implement sig mocking
+      throw new Error("NOT IMPLEMENTED!");
+    },
+  },
+  175: {
+    name: "OP_CHECKMULTISIGVERIFY",
+    eval: (ctx) => {
+      // TODO: Implement sig mocking
+      throw new Error("NOT IMPLEMENTED!");
+    },
+  },
+
+  // NOP
+  176: { name: "OP_NOP1", eval: (ctx) => {} },
+  177: { name: "OP_NOP2", eval: (ctx) => {} },
+  178: { name: "OP_NOP3", eval: (ctx) => {} },
+  179: { name: "OP_NOP4", eval: (ctx) => {} },
+  180: { name: "OP_NOP5", eval: (ctx) => {} },
+  181: { name: "OP_NOP6", eval: (ctx) => {} },
+  182: { name: "OP_NOP7", eval: (ctx) => {} },
+  183: { name: "OP_NOP8", eval: (ctx) => {} },
+  184: { name: "OP_NOP9", eval: (ctx) => {} },
+  185: { name: "OP_NOP10", eval: (ctx) => {} },
 };
 
 function hex(str) {
@@ -448,6 +599,12 @@ function bnToBuf(n) {
   }
 
   return buf.reverse(); // to Little Endian
+}
+
+function is0(buf) {
+  if (buf.length > 1) return false;
+  else if (bud[0] === 0) return true;
+  else return false;
 }
 
 function num(buf) {
