@@ -225,22 +225,28 @@ const opCodeFunctions = {
   132: {
     name: "OP_AND",
     eval: (ctx) => {
-      // TODO: Implement
-      throw new Error("NOT IMPLEMENTED!");
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      const res = zipBuf(nTop2, nTop2, (a, b) => a & b);
+      ctx.stack.push(res);
     },
   },
   133: {
     name: "OP_OR",
     eval: (ctx) => {
-      // TODO: Implement
-      throw new Error("NOT IMPLEMENTED!");
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      const res = zipBuf(nTop2, nTop2, (a, b) => a | b);
+      ctx.stack.push(res);
     },
   },
   134: {
     name: "OP_XOR",
     eval: (ctx) => {
-      // TODO: Implement
-      throw new Error("NOT IMPLEMENTED!");
+      const nTop = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pop(ctx.stack));
+      const res = zipBuf(nTop2, nTop2, (a, b) => a ^ b);
+      ctx.stack.push(res);
     },
   },
   135: {
@@ -648,6 +654,18 @@ function cloneBuf(buf) {
   const clone = Buffer.alloc(buf.length);
   buf.copy(clone);
   return clone;
+}
+
+function zipBuf(buf1, buf2, byteMergeFunc) {
+  if (buf1.length !== buf2.length)
+    throw new Error(
+      `Lengths of buffers don't match. (${buf1.length} != ${buf2.length})`
+    );
+  const res = Buffer.alloc(buf1.length);
+  for (let i = 0; i < buf1.length; i++) {
+    res[i] = byteMergeFunc(buf1[i], buf2[i]);
+  }
+  return res;
 }
 
 function disabled(ctx, code) {
