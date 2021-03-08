@@ -581,6 +581,7 @@ function hex(str) {
 }
 
 function bufToBn(hexBuf) {
+  // TODO: Optimize to not use .toString("hex") !
   const buf = cloneBuf(hexBuf).reverse();
   const isNegative = buf[0] > 128 || (buf[0] === 128 && buf.length > 1);
   if (isNegative) buf[0] -= 128;
