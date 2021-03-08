@@ -381,15 +381,19 @@ const opCodeFunctions = {
   152: {
     name: "OP_LSHIFT",
     eval: (ctx) => {
-      // TODO: Implement shifting
-      throw new Error("NOT IMPLEMENTED!");
+      const shiftLen = num(pop(ctx.stack));
+      const val = pop(ctx.stack);
+      const res = lShift(val);
+      ctx.stack.push(res);
     },
   },
   153: {
     name: "OP_RSHIFT",
     eval: (ctx) => {
-      // TODO: Implement shifting
-      throw new Error("NOT IMPLEMENTED!");
+      const shiftLen = num(pop(ctx.stack));
+      const val = pop(ctx.stack);
+      const res = rShift(val);
+      ctx.stack.push(res);
     },
   },
   154: {
@@ -632,6 +636,68 @@ function numBuf2Bin(numBuf, binLength) {
   for (let i = 0; i < numBuf.length - 1; i++) res[i] = numBuf[i];
   res[numBuf.length - 1] = numBuf[numBuf.length - 1] ^ 128;
   res[res.length - 1] = numBuf[numBuf.length - 1] & 128;
+
+  return res;
+}
+
+function shiftByteLeft(a = 255, numLeftOfA = 254, shiftLength = 3) {
+  a = a << shiftLength; // 11111000
+  const mask = 255 << (8 - shiftLength); // 11100000
+  const moveOver = (numLeftOfA & mask) >> (8 - shiftLength); // 00000110
+  a = a | moveOver;
+  return a & 255;
+}
+
+function shiftByteRight(a = 255, numRightOfA = 3, shiftLength = 3) {
+  a = a >> shiftLength; // 00011111
+  const mask = 255 >> (8 - shiftLength); // 00000111
+  const moveOver = (numRightOfA & mask) << (8 - shiftLength); // 01100000
+  a = a | moveOver;
+  return a & 255;
+}
+
+function lShift(buf, shiftLength) {
+  if (shiftLength < 0) throw new Error("Shift length cannot be negative");
+  if (shiftLength >= buf.length * 8) return Buffer.alloc(buf.length);
+  if (shiftLength === 0) return cloneBuf(buf);
+
+  const res = cloneBuf(buf);
+
+  // TODO: Optimize by moving values the first [shiftLength / 8] times, instead of moving bits
+  while (shiftLength > 0) {
+    const shiftStep = Math.min(shiftLength, 8);
+    shiftLength -= 8;
+
+    let prevNum = 0;
+    for (let i = res.length - 1; i >= 0; i--) {
+      const current = res[i];
+      res[i] = shiftByteLeft(current, prevNum, shiftStep);
+      prevNum = current;
+    }
+  }
+
+  return res;
+}
+
+function rShift(buf, shiftLength) {
+  if (shiftLength < 0) throw new Error("Shift length cannot be negative");
+  if (shiftLength >= buf.length * 8) return Buffer.alloc(buf.length);
+  if (shiftLength === 0) return cloneBuf(buf);
+
+  const res = cloneBuf(buf);
+
+  // TODO: Optimize by moving values the first [shiftLength / 8] times, instead of moving bits
+  while (shiftLength > 0) {
+    const shiftStep = Math.min(shiftLength, 8);
+    shiftLength -= 8;
+
+    let prevNum = 0;
+    for (let i = 0; i < res.length; i++) {
+      const current = res[i];
+      res[i] = shiftByteRight(current, prevNum, shiftStep);
+      prevNum = current;
+    }
+  }
 
   return res;
 }
