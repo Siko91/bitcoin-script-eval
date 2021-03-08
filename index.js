@@ -1,3 +1,3 @@
-const { eval } = require("./src/bitcoinScriptEval");
+const bitcoinScriptEval = require("./src/bitcoinScriptEval");
 
-module.exports = eval;
+module.exports = bitcoinScriptEval;
