@@ -1,3 +1,5 @@
+const bsv = require("bsv");
+
 const PROTOCOL_VERSION = hex("FFFFFFFF");
 
 const opCodeFunctions = {
@@ -193,16 +195,16 @@ const opCodeFunctions = {
     eval: (ctx) => {
       const length = num(pop(ctx.stack));
       const val = cloneBuf(pop(ctx.stack));
-      // TODO: convert to Byte sequence
-      throw new Error("NOT IMPLEMENTED!");
+      const bin = numBuf2Bin(val, length);
+      ctx.stack.push(bin);
     },
   },
   129: {
     name: "OP_BIN2NUM",
     eval: (ctx) => {
       const val = cloneBuf(pop(ctx.stack));
-      // TODO: convert to numeric value
-      throw new Error("NOT IMPLEMENTED!");
+      const num = bnToBuf(bufToBn(val));
+      ctx.stack.push(num);
     },
   },
   130: {
@@ -578,7 +580,7 @@ function hex(str) {
   return Buffer.from(str, "hex");
 }
 
-function bufToBn(buf) {
+function bufToBn(hexBuf) {
   const buf = cloneBuf(hexBuf).reverse();
   const isNegative = buf[0] > 128 || (buf[0] === 128 && buf.length > 1);
   if (isNegative) buf[0] -= 128;
@@ -588,7 +590,7 @@ function bufToBn(buf) {
 
 function bnToBuf(n) {
   const arr = n.toArray();
-  const buf = Buffer.from(arr);
+  let buf = Buffer.from(arr);
 
   if (n.negative) {
     // if first bit is 1
@@ -618,6 +620,19 @@ function num(buf) {
   if (n.words.length > 1)
     throw new Error("Value too big - cannot parse to Int");
   return n.negative ? -n.words[0] : n.words[0];
+}
+
+function numBuf2Bin(numBuf, binLength) {
+  if (binLength < 0) throw new RangeError("Length cannot be negative");
+  if (binLength < numBuf.length)
+    throw new RangeError("Value cannot fit in this byte sequence length");
+
+  const res = Buffer.alloc(binLength);
+  for (let i = 0; i < numBuf.length - 1; i++) res[i] = numBuf[i];
+  res[numBuf.length - 1] = numBuf[numBuf.length - 1] ^ 128;
+  res[res.length - 1] = numBuf[numBuf.length - 1] & 128;
+
+  return res;
 }
 
 function last(arr) {
