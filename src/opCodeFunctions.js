@@ -1,7 +1,5 @@
 const bsv = require("bsv");
 
-const PROTOCOL_VERSION = hex("FFFFFFFF");
-
 const opCodeFunctions = {
   // Constants
   0: { name: "OP_0", eval: (ctx) => ctx.stack.push(hex("00")) },
@@ -28,7 +26,7 @@ const opCodeFunctions = {
   98: {
     name: "OP_VER",
     eval: (ctx) => disabled(ctx, 98),
-    forceEval: (ctx) => ctx.stack.push(PROTOCOL_VERSION),
+    forceEval: (ctx) => ctx.stack.push(getProtocolVersion(ctx)),
   },
   99: {
     name: "OP_IF",
@@ -50,7 +48,7 @@ const opCodeFunctions = {
     name: "OP_VERIF",
     eval: (ctx) => disabled(ctx, 101),
     forceEval: (ctx) => {
-      if (eq(PROTOCOL_VERSION, pop(ctx.stack)))
+      if (eq(getProtocolVersion(ctx), pop(ctx.stack)))
         enterBlock(ctx, 101, undefined, 104);
       else enterBlock(ctx, 101, 103, 104);
     },
@@ -59,7 +57,7 @@ const opCodeFunctions = {
     name: "OP_VERNOTIF",
     eval: (ctx) => disabled(ctx, 102),
     forceEval: (ctx) => {
-      if (!eq(PROTOCOL_VERSION, pop(ctx.stack)))
+      if (!eq(getProtocolVersion(ctx), pop(ctx.stack)))
         enterBlock(ctx, 102, undefined, 104);
       else enterBlock(ctx, 102, 103, 104);
     },
@@ -579,6 +577,10 @@ const opCodeFunctions = {
   184: { name: "OP_NOP9", eval: (ctx) => {} },
   185: { name: "OP_NOP10", eval: (ctx) => {} },
 };
+
+function getProtocolVersion(ctx) {
+  return bnToBuf(bsv.Bn(ctx.protocolVersion || 70015));
+}
 
 function hex(str) {
   return Buffer.from(str, "hex");
