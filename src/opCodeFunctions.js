@@ -225,8 +225,8 @@ const opCodeFunctions = {
   132: {
     name: "OP_AND",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop = pop(ctx.stack);
+      const nTop2 = pop(ctx.stack);
       const res = zipBuf(nTop2, nTop2, (a, b) => a & b);
       ctx.stack.push(res);
     },
@@ -234,8 +234,8 @@ const opCodeFunctions = {
   133: {
     name: "OP_OR",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop = pop(ctx.stack);
+      const nTop2 = pop(ctx.stack);
       const res = zipBuf(nTop2, nTop2, (a, b) => a | b);
       ctx.stack.push(res);
     },
@@ -243,8 +243,8 @@ const opCodeFunctions = {
   134: {
     name: "OP_XOR",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop = pop(ctx.stack);
+      const nTop2 = pop(ctx.stack);
       const res = zipBuf(nTop2, nTop2, (a, b) => a ^ b);
       ctx.stack.push(res);
     },
