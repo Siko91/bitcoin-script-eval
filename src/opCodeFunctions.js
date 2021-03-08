@@ -539,29 +539,45 @@ const opCodeFunctions = {
   172: {
     name: "OP_CHECKSIG",
     eval: (ctx) => {
-      // TODO: Implement sig mocking
-      throw new Error("NOT IMPLEMENTED!");
+      const pub = pop(ctx.stack);
+      const sig = pop(ctx.stack);
+      const sigPass = checkSig(ctx, sig, pub);
+      ctx.stack.push(sigPass ? hex("01") : hex("00"));
     },
   },
   173: {
     name: "OP_CHECKSIGVERIFY",
     eval: (ctx) => {
-      // TODO: Implement sig mocking
-      throw new Error("NOT IMPLEMENTED!");
+      const pub = pop(ctx.stack);
+      const sig = pop(ctx.stack);
+      const sigPass = checkSig(ctx, sig, pub);
+      if (!sigPass) endScript(ctx, "invalid");
     },
   },
   174: {
     name: "OP_CHECKMULTISIG",
     eval: (ctx) => {
-      // TODO: Implement sig mocking
-      throw new Error("NOT IMPLEMENTED!");
+      const pubCount = num(pop(ctx.stack));
+      const pubs = popN(ctx.stack, pubCount);
+      const sigCount = num(pop(ctx.stack));
+      const sigs = popN(ctx.stack, sigCount);
+      pop(ctx.stack); // ignored value
+
+      const sigsPass = checkMultiSig(ctx, sigs, sigCount, pubs, pubCount);
+      ctx.stack.push(sigsPass ? hex("01") : hex("00"));
     },
   },
   175: {
     name: "OP_CHECKMULTISIGVERIFY",
     eval: (ctx) => {
-      // TODO: Implement sig mocking
-      throw new Error("NOT IMPLEMENTED!");
+      const pubCount = num(pop(ctx.stack));
+      const pubs = popN(ctx.stack, pubCount);
+      const sigCount = num(pop(ctx.stack));
+      const sigs = popN(ctx.stack, sigCount);
+      pop(ctx.stack); // ignored value
+
+      const sigsPass = checkMultiSig(ctx, sigs, sigCount, pubs, pubCount);
+      if (!sigsPass) endScript(ctx, "invalid");
     },
   },
 
@@ -577,6 +593,52 @@ const opCodeFunctions = {
   184: { name: "OP_NOP9", eval: (ctx) => {} },
   185: { name: "OP_NOP10", eval: (ctx) => {} },
 };
+
+function calculatePreimageHash(ctx) {
+  // TODO: Implement calculatePreimageHash
+  throw new Error("NOT IMPLEMENTED");
+}
+
+function isSignatureValid(sig, pub, hash) {
+  // TODO: Implement isSignatureValid
+  throw new Error("NOT IMPLEMENTED");
+}
+
+function checkSig(ctx, sig, pub) {
+  if (ctx.sigsAlwaysPass === true) return true;
+  let hash = null;
+  if (ctx.txPreimageHash) hash = Buffer.from(ctx.txPreimageHash, "hex");
+  else if (ctx.rawTx && ctx.vin) hash = calculatePreimageHash(ctx);
+  else
+    throw new Error(
+      "Unable to execute Signature check: Unknown txPreimage hash"
+    );
+
+  return isSignatureValid(sig, pub, hash);
+}
+
+function checkMultiSig(ctx, sigs, sigCount, pubs, pubCount) {
+  if (sigCount > pubCount)
+    throw new Error("Signature Count Cannot exceed PubKey count");
+  if (ctx.sigsAlwaysPass === true) return true;
+  let hash = null;
+  if (ctx.txPreimageHash) hash = Buffer.from(ctx.txPreimageHash, "hex");
+  else if (ctx.rawTx && ctx.vin) hash = calculatePreimageHash(ctx);
+  else
+    throw new Error(
+      "Unable to execute Signature check: Unknown txPreimage hash"
+    );
+
+  const sig = 0;
+  for (let i = 0; i < pubs.length; i++) {
+    const sigPass = isSignatureValid(sigs[sig], pubs[i], hash);
+    if (sigPass) {
+      sig++;
+      if (sig > sigs.length - 1) return true;
+    }
+  }
+  return false;
+}
 
 function getProtocolVersion(ctx) {
   return bnToBuf(bsv.Bn(ctx.protocolVersion || 70015));
@@ -705,13 +767,21 @@ function rShift(buf, shiftLength) {
 }
 
 function last(arr) {
-  if (!arr.length) throw new Error("Can't get last item of empty array");
+  if (!arr.length) throw new RangeError("Can't get last item of empty array");
   return arr[arr.length - 1];
 }
 
 function pop(arr) {
-  if (!arr.length) throw new Error("Can't get last item of empty array");
+  if (!arr.length) throw new RangeError("Can't get last item of empty array");
   return arr.pop();
+}
+
+function popN(arr, n) {
+  if (n > arr.length)
+    throw new RangeError(`Can't pop ${n} items - Array too small`);
+  const results = [];
+  for (let i = 0; i < n; i++) [].push(pop(arr));
+  return results.reverse(); // ordered the same way as they were in the stack
 }
 
 function reverseIndex(arr, i) {
