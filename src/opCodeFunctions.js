@@ -241,7 +241,7 @@ const opCodeFunctions = {
       const toInvert = pop(ctx.stack);
       const invertedCopy = cloneBuf(toInvert);
       for (let i = 0; i < invertedCopy.length; i++) {
-        invertedCopy[i] = 254 - invertedCopy[i];
+        invertedCopy[i] = invertedCopy[i] ^ 255;
       }
       ctx.stack.push(invertedCopy);
     },
