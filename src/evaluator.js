@@ -19,8 +19,8 @@ async function eval(context) {
   }
   const error = checkForErrors(context);
   context.ended = true;
-  context.done = !error;
   context.endMessage = context.endMessage || error;
+  context.done = !context.endMessage;
 
   return context;
 }
@@ -53,12 +53,12 @@ async function evaluateOpCode(step, context) {
 }
 
 function getOpReturn(context, fromStep) {
-  const restOfScript = context.script.slice(fromStep + 1);
+  const restOfScript = context.script.chunks.slice(fromStep + 1);
   const results = [];
   for (let i = 0; i < restOfScript.length; i++) {
     const step = restOfScript[i];
     if (step.buf) results.push(step.buf);
-    else results.push(step.opCodeNum);
+    else results.push(Buffer.from(step.opCodeNum.toString(16), "hex"));
   }
   return results;
 }
