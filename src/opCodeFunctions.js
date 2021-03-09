@@ -734,7 +734,7 @@ function numBuf2Bin(numBuf, binLength) {
 
   const res = Buffer.alloc(binLength);
   for (let i = 0; i < numBuf.length - 1; i++) res[i] = numBuf[i];
-  res[numBuf.length - 1] = numBuf[numBuf.length - 1] ^ 128;
+  res[numBuf.length - 1] = numBuf[numBuf.length - 1] & 127;
   res[res.length - 1] = numBuf[numBuf.length - 1] & 128;
 
   return res;
