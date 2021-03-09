@@ -180,7 +180,28 @@ describe("OpCode Stack", () => {
     await check("01 02 03 OP_TUCK 04", "01 03 02 03 04"));
 });
 
-describe("OpCode Data Manipulation", () => {});
+describe("OpCode Data Manipulation", () => {
+  it("OP_CAT", async () =>
+    await check("01 02 OP_CAT 03 04 OP_CAT OP_CAT", "01020304"));
+
+  it("OP_SPLIT", async () =>
+    await check("01020304 02 OP_SPLIT 01 OP_SPLIT", "0102 03 04"));
+
+  it("OP_NUM2BIN", async () =>
+    await check("01020304 0a OP_NUM2BIN", "01020304000000000000"));
+
+  it("- OP_NUM2BIN", async () =>
+    await check("01020384 0a OP_NUM2BIN", "01020304000000000080"));
+
+  it("OP_BIN2NUM", async () =>
+    await check("01020304000000000000 OP_BIN2NUM", "01020304"));
+
+  it("- OP_BIN2NUM", async () =>
+    await check("01020304000000000080 OP_BIN2NUM", "01020384"));
+
+  it("OP_SIZE", async () =>
+    await check("0102030400000000008000 OP_SIZE", "0102030400000000008000 0b"));
+});
 
 async function check(
   scrToCheck,
