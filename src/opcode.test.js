@@ -203,6 +203,20 @@ describe("OpCode Data Manipulation", () => {
     await check("0102030400000000008000 OP_SIZE", "0102030400000000008000 0b"));
 });
 
+describe("OpCode Bitwise Logic", () => {
+  it("OP_INVERT", async () => await check("0102 OP_INVERT", "fefd"));
+
+  it("OP_AND", async () => await check("0101 0303 OP_AND", "0101"));
+  it("OP_OR", async () => await check("0101 0202 OP_OR", "0303"));
+  it("OP_XOR", async () => await check("0101 0303 OP_XOR", "0202"));
+
+  it("OP_EQUAL", async () => await check("0101 0101 OP_EQUAL", "01"));
+  it("!OP_EQUAL", async () => await check("0101 0303 OP_EQUAL", "00"));
+  it("OP_EQUALVERIFY", async () => await check("0101 0101 OP_EQUALVERIFY", ""));
+  it("!OP_EQUALVERIFY", async () =>
+    await check("0101 0303 OP_EQUALVERIFY", "", "Stack values are not equal"));
+});
+
 async function check(
   scrToCheck,
   expectedStack,
