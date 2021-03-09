@@ -132,7 +132,55 @@ describe("OpCode Stack", () => {
       null,
       "04"
     ));
+
+  it("01 02 OP_2DROP", async () => await check("01 02 OP_2DROP 03", "03"));
+
+  it("OP_2DUP", async () => await check("01 02 OP_2DUP 03", "01 02 01 02 03"));
+  it("OP_3DUP", async () =>
+    await check("01 02 03 OP_3DUP 04", "01 02 03 01 02 03 04"));
+  it("OP_2OVER", async () =>
+    await check("01 02 03 04 OP_2OVER 05", "01 02 03 04 01 02 05"));
+  it("OP_2ROT", async () =>
+    await check("01 02 03 04 05 06 OP_2ROT 07", "03 04 05 06 01 02 07"));
+  it("OP_2SWAP", async () =>
+    await check("01 02 03 04 05 06 OP_2SWAP 07", "01 02 05 06 03 04 07"));
+  it("OP_IFDUP", async () =>
+    await check("01 OP_IFDUP 00 OP_IFDUP 01 OP_IFDUP", "01 01 00 01 01"));
+  it("OP_DEPTH", async () => await check("01 02 OP_DEPTH", "01 02 02"));
+  it("OP_DROP", async () => await check("01 02 OP_DROP 03", "01 03"));
+  it("OP_DUP", async () => await check("01 02 OP_DUP 03", "01 02 02 03"));
+  it("OP_NIP", async () => await check("01 02 OP_NIP 03", "02 03"));
+  it("OP_OVER", async () => await check("01 02 OP_OVER 03", "01 02 01 03"));
+
+  it("2 OP_PICK", async () =>
+    await check("01 02 03 02 OP_PICK 04", "01 02 03 01 04"));
+  it("F OP_PICK", async () =>
+    await check("01 0f OP_PICK 04", "01 0f", "Index out of bounds : 16"));
+  it("-1 OP_PICK", async () =>
+    await check(
+      "01 81 OP_PICK 04",
+      "01 81",
+      "Value is negative - cannot parse to UInt"
+    ));
+
+  it("2 OP_ROLL", async () =>
+    await check("01 02 03 02 OP_ROLL 04", "02 03 01 04"));
+  it("F OP_ROLL", async () =>
+    await check("01 0f OP_ROLL 04", "01 0f", "Index out of bounds : 16"));
+  it("-1 OP_ROLL", async () =>
+    await check(
+      "01 81 OP_ROLL 04",
+      "01 81",
+      "Value is negative - cannot parse to UInt"
+    ));
+
+  it("OP_ROT", async () => await check("01 02 03 OP_ROT 04", "02 03 01 04"));
+  it("OP_SWAP", async () => await check("01 02 03 OP_SWAP 04", "01 03 02 04"));
+  it("OP_TUCK", async () =>
+    await check("01 02 03 OP_TUCK 04", "01 03 02 03 04"));
 });
+
+describe("OpCode Data Manipulation", () => {});
 
 async function check(
   scrToCheck,
@@ -145,8 +193,8 @@ async function check(
     (expectedError
       ? `Script should fail with Error : ${expectedError}`
       : `Scripts should pass`) +
-      `\n"${scrToCheck}"` +
-      `expected stack: "${expectedStack}"`
+      `\n[${scrToCheck}]` +
+      `\nand its stack should be: [${expectedStack}]`
   );
   const ctxActual = await bitcoinScriptEval(scrToCheck, "asm");
 
@@ -167,7 +215,7 @@ async function check(
   const valsActual = ctxActual.stack.map((i) => i.toString("hex")).join(" ");
   if (valsActual !== expectedStack)
     throw new Error(
-      `Expected stack [${valsActual}] to equal \n[${expectedStack}]`
+      `Expected stack [${valsActual}] to equal [${expectedStack}]`
     );
 
   if (expectedReturn) {
