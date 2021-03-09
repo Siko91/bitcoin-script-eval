@@ -155,12 +155,21 @@ const opCodeFunctions = {
   },
   121: {
     name: "OP_PICK",
-    eval: (ctx) =>
-      ctx.stack.push(reverseIndex(ctx.stack, uint(pop(ctx.stack)))),
+    eval: (ctx) => {
+      const i = uint(last(ctx.stack));
+      const picked = reverseIndex(ctx.stack, i + 1);
+      pop(ctx.stack);
+      ctx.stack.push(picked);
+    },
   },
   122: {
     name: "OP_ROLL",
-    eval: (ctx) => ctx.stack.push(pullOut(ctx.stack, uint(pop(ctx.stack)))),
+    eval: (ctx) => {
+      const i = uint(last(ctx.stack));
+      const rolled = pullOut(ctx.stack, i + 1);
+      pop(ctx.stack);
+      ctx.stack.push(rolled);
+    },
   },
   123: {
     name: "OP_ROT",
@@ -191,25 +200,32 @@ const opCodeFunctions = {
   127: {
     name: "OP_SPLIT",
     eval: (ctx) => {
-      const valToSplit = pullOut(ctx.stack, 1);
-      const splitAt = uint(pullOut(ctx.stack, 0));
-      ctx.stack.push(valToSplit.slice(0, splitAt), valToSplit(splitAt));
+      const splitAt = uint(last(ctx.stack));
+      const valToSplit = reverseIndex(ctx.stack, 1);
+      const part1 = valToSplit.slice(0, splitAt);
+      const part2 = valToSplit.slice(splitAt);
+      pop(ctx.stack);
+      pop(ctx.stack);
+      ctx.stack.push(part1, part2);
     },
   },
   128: {
     name: "OP_NUM2BIN",
     eval: (ctx) => {
-      const val = cloneBuf(pullOut(ctx.stack, 1));
-      const length = uint(pullOut(ctx.stack, 0));
+      const length = uint(last(ctx.stack));
+      const val = cloneBuf(reverseIndex(ctx.stack, 1));
       const bin = numBuf2Bin(val, length);
+      pop(ctx.stack);
+      pop(ctx.stack);
       ctx.stack.push(bin);
     },
   },
   129: {
     name: "OP_BIN2NUM",
     eval: (ctx) => {
-      const val = cloneBuf(pop(ctx.stack));
+      const val = cloneBuf(last(ctx.stack));
       const num = bnToBuf(bufToBn(val));
+      pop(ctx.stack);
       ctx.stack.push(num);
     },
   },
