@@ -699,14 +699,15 @@ function bnToBuf(n) {
   if (n.negative) {
     // if first bit is 1
     if (buf[0] >= 128) {
-      buf = Buffer.concat([128], buf); // then add another byte with a first bit
+      buf = Buffer.concat([Buffer.alloc(1), buf], buf.length + 1); // then add another byte with a first bit
+      buf[0] = 128;
     } else {
       buf[0] += 128; // else set first bit to 1
     }
   } else {
     // if first bit is 1
     if (buf[0] >= 128) {
-      buf = Buffer.concat([0], buf); // then add a 0 byte
+      buf = Buffer.concat([Buffer.alloc(1), buf], buf.length + 1); // then add a 0 byte
     }
   }
 
