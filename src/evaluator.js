@@ -17,10 +17,17 @@ async function eval(context) {
 
     await evaluateStep(step, context);
   }
+  const error = checkForErrors(context);
   context.ended = true;
-  context.done = true;
+  context.done = !error;
+  context.endMessage = context.endMessage || error;
 
   return context;
+}
+
+function checkForErrors(context) {
+  if (context.blocks && context.blocks.length)
+    return "Didn't exit blocks. " + context.blocks.length;
 }
 
 async function evaluateStep(step, context) {
