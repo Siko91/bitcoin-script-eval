@@ -73,10 +73,16 @@ const opCodeFunctions = {
   105: {
     name: "OP_VERIFY",
     eval: (ctx) => {
-      if (eq(hex("00"), pop(ctx.stack))) endScript(ctx, "invalid");
+      if (eq(hex("00"), pop(ctx.stack))) throw new Error("Verification failed");
     },
   },
-  106: { name: "OP_RETURN", eval: (ctx) => endScript(ctx, "return") },
+  106: {
+    name: "OP_RETURN",
+    eval: (ctx) => {
+      ctx.endedWithOpReturn = true;
+      throw new Error("OP_RETURN");
+    },
+  },
 
   // Stack
   107: {
@@ -263,7 +269,7 @@ const opCodeFunctions = {
     name: "OP_EQUALVERIFY",
     eval: (ctx) => {
       if (!eq(pop(ctx.stack), pop(ctx.stack))) {
-        endScript(ctx, "invalid");
+        throw new Error("Stack values are not equal");
       }
     },
   },
@@ -423,7 +429,7 @@ const opCodeFunctions = {
     eval: (ctx) => {
       const nTop = bufToBn(pop(ctx.stack));
       const nTop2 = bufToBn(pop(ctx.stack));
-      if (!nTop2.eq(nTop)) endScript(ctx, "invalid");
+      if (!nTop2.eq(nTop)) throw new Error("Numbers are not equal");
     },
   },
   158: {
@@ -551,7 +557,7 @@ const opCodeFunctions = {
       const pub = pop(ctx.stack);
       const sig = pop(ctx.stack);
       const sigPass = checkSig(ctx, sig, pub);
-      if (!sigPass) endScript(ctx, "invalid");
+      if (!sigPass) throw new Error("Signature didn't pass");
     },
   },
   174: {
@@ -577,7 +583,7 @@ const opCodeFunctions = {
       pop(ctx.stack); // ignored value
 
       const sigsPass = checkMultiSig(ctx, sigs, sigCount, pubs, pubCount);
-      if (!sigsPass) endScript(ctx, "invalid");
+      if (!sigsPass) throw new Error("Signatures didn't pass");
     },
   },
 
@@ -871,11 +877,6 @@ function skipThisBlockUntil(ctx, skipUntilCode) {
   const block = last(ctx.blocks);
   block.skipUntil = [skipUntilCode];
   ctx.skipUntil = block.skipUntil;
-}
-
-function endScript(ctx, reason) {
-  ctx.ended = true;
-  ctx.endReason = reason;
 }
 
 module.exports = opCodeFunctions;
