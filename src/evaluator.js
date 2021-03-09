@@ -5,6 +5,7 @@ async function eval(context) {
   context.altStack = context.altStack || [];
 
   context.done = false;
+  context.ended = false;
   for (let i = 0; i < context.script.chunks.length; i++) {
     context.step = i;
 
@@ -16,6 +17,7 @@ async function eval(context) {
     const step = context.script.chunks[i];
     await evaluateStep(step, context);
   }
+  context.ended = true;
   context.done = true;
 
   return context;
