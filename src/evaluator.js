@@ -8,13 +8,13 @@ async function eval(context) {
   context.ended = false;
   for (let i = 0; i < context.script.chunks.length; i++) {
     context.step = i;
+    const step = context.script.chunks[i];
 
     if (context.ended) break;
 
     if (context.skipUntil && context.skipUntil.length)
       if (!context.skipUntil.includes(step.opCodeNum)) continue;
 
-    const step = context.script.chunks[i];
     await evaluateStep(step, context);
   }
   context.ended = true;
