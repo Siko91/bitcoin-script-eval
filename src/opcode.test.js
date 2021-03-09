@@ -1,6 +1,6 @@
 const bitcoinScriptEval = require("./bitcoinScriptEval");
 
-describe("OpCode Tests", () => {
+describe("OpCode Constants", () => {
   it("OP_0 & OP_1", async () =>
     await check("OP_0 OP_FALSE OP_1 OP_TRUE", "00 00 01 01"));
   it("OP_1NEGATE", async () => await check("OP_1NEGATE", "81"));
@@ -14,12 +14,121 @@ describe("OpCode Tests", () => {
       "01 OP_NOP OP_NOP1 OP_NOP2 OP_NOP3 OP_NOP4 OP_NOP5 OP_NOP6 OP_NOP7 OP_NOP8 OP_NOP9 OP_NOP10 02",
       "01 02"
     ));
-  it("OP_VER", async () => await check("OP_VER", "7f1101"));
 });
 
-async function check(scrToCheck, scrExpected, expectedError = undefined) {
+describe("OpCode Flow Control", () => {
+  it("OP_VER", async () => await check("OP_VER", "7f1101"));
+
+  it("01 OP_IF", async () =>
+    await check("01 OP_IF 02 03 OP_ENDIF 04", "02 03 04"));
+  it("00 OP_IF", async () => await check("00 OP_IF 02 03 OP_ENDIF 04", "04"));
+  it("00 OP_NOTIF", async () =>
+    await check("00 OP_NOTIF 02 03 OP_ENDIF 04", "02 03 04"));
+  it("01 OP_NOTIF", async () =>
+    await check("01 OP_NOTIF 02 03 OP_ENDIF 04", "04"));
+
+  it("01 OP_IF OP_ELSE", async () =>
+    await check("01 OP_IF 02 03 OP_ELSE 00 OP_ENDIF 04", "02 03 04"));
+  it("00 OP_IF OP_ELSE", async () =>
+    await check("00 OP_IF 02 03 OP_ELSE 00 OP_ENDIF 04", "00 04"));
+  it("00 OP_NOTIF OP_ELSE", async () =>
+    await check("00 OP_NOTIF 02 03 OP_ELSE 00 OP_ENDIF 04", "02 03 04"));
+  it("01 OP_NOTIF OP_ELSE", async () =>
+    await check("01 OP_NOTIF 02 03 OP_ELSE 00 OP_ENDIF 04", "00 04"));
+
+  it("OP_IF OP_IF", async () =>
+    await check("01 OP_IF 02 OP_IF 03 OP_ENDIF OP_ENDIF 04", "03 04"));
+  it("OP_IF OP_ELSE OP_IF", async () =>
+    await check(
+      "00 OP_IF 02 OP_ELSE 03 OP_IF 04 OP_ENDIF OP_ENDIF 04",
+      "04 04"
+    ));
+  it("OP_IF OP_IF OP_IF OP_ELSE", async () =>
+    await check(
+      "01 OP_IF 01 OP_IF 00 OP_IF 02 OP_ELSE 03 OP_ENDIF 04 OP_ENDIF 05 OP_ENDIF 06",
+      "03 04 05 06"
+    ));
+  it("OP_IF OP_IF OP_ELSE OP_IF", async () =>
+    await check(
+      "01 OP_IF 00 OP_IF 02 OP_ELSE 01 OP_IF 03 OP_ENDIF 04 OP_ENDIF 05 OP_ENDIF 06",
+      "03 04 05 06"
+    ));
+
+  it("OP_IF ...", async () =>
+    await check("01 OP_IF 01 02 03", "01 02 03", "Didn't exit blocks. 1"));
+  it("OP_IF OP_IF ...", async () =>
+    await check(
+      "01 OP_IF 02 OP_IF 01 02 03",
+      "01 02 03",
+      "Didn't exit blocks. 2"
+    ));
+  it("OP_IF OP_IF OP_ENDIF ...", async () =>
+    await check(
+      "01 OP_IF 02 OP_IF 01 02 OP_ENDIF 03",
+      "01 02 03",
+      "Didn't exit blocks. 1"
+    ));
+  it("OP_IF OP_IF OP_ELSE ...", async () =>
+    await check(
+      "01 OP_IF 00 OP_IF 01 02 03 OP_ELSE 04",
+      "04",
+      "Didn't exit blocks. 2"
+    ));
+
+  it("00 OP_VERIFY", async () =>
+    await check("01 00 OP_VERIFY 02", "01", "Verification failed"));
+  it("01 OP_VERIFY", async () => await check("01 01 OP_VERIFY 02", "01 02"));
+
+  it("OP_RETURN", async () =>
+    await check("04 OP_RETURN 01 02 03", "04", "OP_RETURN", "01 02 03"));
+  it("00 OP_RETURN", async () =>
+    await check("00 OP_RETURN 01 02 03", "00", "OP_RETURN", "01 02 03"));
+
+  it("OP_IF OP_RETURN", async () =>
+    await check(
+      "01 OP_IF 04 OP_RETURN 01 02 03 OP_ELSE 05 OP_ENDIF 06",
+      "04",
+      "OP_RETURN",
+      "01 02 03 67 05 68 06"
+    ));
+  it("OP_ELSE OP_RETURN", async () =>
+    await check(
+      "00 OP_IF ff OP_ELSE 04 OP_RETURN 01 02 03 OP_ELSE 05 OP_ENDIF 06",
+      "04",
+      "OP_RETURN",
+      "01 02 03 67 05 68 06"
+    ));
+  it("OP_IF OP_RETURN OP_ELSE OP_RETURN", async () =>
+    await check(
+      "00 OP_IF f4 OP_RETURN f1 f2 f3 OP_ELSE 04 OP_RETURN 01 02 03 OP_ELSE 05 OP_ENDIF 06",
+      "04",
+      "OP_RETURN",
+      "01 02 03 67 05 68 06"
+    ));
+  it("OP_IF OP_RETURN ... OP_ELSE OP_RETURN", async () =>
+    await check(
+      "01 OP_IF f4 OP_RETURN f1 f2 f3 OP_ELSE 04 OP_RETURN 01 02 03 OP_ELSE 05 OP_ENDIF 06",
+      "f4",
+      "OP_RETURN",
+      "f1 f2 f3 67 04 6a 01 02 03 67 05 68 06"
+    ));
+});
+
+describe("OpCode Stack", () => {});
+
+async function check(
+  scrToCheck,
+  scrExpected,
+  expectedError = undefined,
+  scrWithStackLikeOpReturn = undefined
+) {
   console.log(
-    `Scripts should evaluate the same: \n"${scrToCheck}"\n"${scrExpected}"`
+    (expectedError
+      ? `Script should fail and produce the same stack as script 2:` +
+        `\n\tExpected Error : ${expectedError}`
+      : `Scripts should evaluate the same:`) +
+      `\n"${scrToCheck}"` +
+      `\n"${scrExpected}"`
   );
   const ctxActual = await bitcoinScriptEval(scrToCheck, "asm");
   const ctxExpected = await bitcoinScriptEval(scrExpected, "asm");
@@ -29,7 +138,7 @@ async function check(scrToCheck, scrExpected, expectedError = undefined) {
       throw new Error(`Expected script ${scrToCheck} to fail.`);
     if (ctxActual.endMessage !== expectedError)
       throw new Error(
-        `Expected Error '${endMessage}' to equal '${expectedError}'`
+        `Expected Error '${ctxActual.endMessage}' to equal '${expectedError}'`
       );
   } else {
     if (!ctxActual.done || ctxActual.endMessage)
@@ -44,6 +153,25 @@ async function check(scrToCheck, scrExpected, expectedError = undefined) {
     .join(" ");
   if (valsActual !== valsExpected)
     throw new Error(
-      `Assertion failed: Expected [${valsActual}] to equal [${valsExpected}]`
+      `Assertion failed: Expected \n[${valsActual}]\n to equal \n[${valsExpected}]`
     );
+
+  if (scrWithStackLikeOpReturn) {
+    const actualReturn = ctxActual.opReturn
+      .map((i) => i.toString("hex"))
+      .join(" ");
+
+    const ctxOpReturn = await bitcoinScriptEval(
+      scrWithStackLikeOpReturn,
+      "asm"
+    );
+    const expectedReturn = ctxOpReturn.stack
+      .map((i) => i.toString("hex"))
+      .join(" ");
+
+    if (actualReturn !== expectedReturn)
+      throw new Error(
+        `Expected OpReturn [${actualReturn}] to equal [${expectedReturn}]`
+      );
+  }
 }
