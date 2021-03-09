@@ -566,11 +566,14 @@ const opCodeFunctions = {
   174: {
     name: "OP_CHECKMULTISIG",
     eval: (ctx) => {
-      const pubCount = num(pop(ctx.stack));
+      const pubCount = num(last(ctx.stack));
+      const sigCount = num(reverseIndex(ctx.stack, pubCount + 1));
+      pullOut(ctx.stack, pubCount + 1 + sigCount + 1); // ignored value
+
+      pop(ctx.stack);
       const pubs = popN(ctx.stack, pubCount);
-      const sigCount = num(pop(ctx.stack));
+      pop(ctx.stack);
       const sigs = popN(ctx.stack, sigCount);
-      pop(ctx.stack); // ignored value
 
       const sigsPass = checkMultiSig(ctx, sigs, sigCount, pubs, pubCount);
       ctx.stack.push(sigsPass ? hex("01") : hex("00"));
@@ -579,11 +582,14 @@ const opCodeFunctions = {
   175: {
     name: "OP_CHECKMULTISIGVERIFY",
     eval: (ctx) => {
-      const pubCount = num(pop(ctx.stack));
+      const pubCount = num(last(ctx.stack));
+      const sigCount = num(reverseIndex(ctx.stack, pubCount + 1));
+      pullOut(ctx.stack, pubCount + 1 + sigCount + 1); // ignored value
+
+      pop(ctx.stack);
       const pubs = popN(ctx.stack, pubCount);
-      const sigCount = num(pop(ctx.stack));
+      pop(ctx.stack);
       const sigs = popN(ctx.stack, sigCount);
-      pop(ctx.stack); // ignored value
 
       const sigsPass = checkMultiSig(ctx, sigs, sigCount, pubs, pubCount);
       if (!sigsPass) throw new Error("Signatures didn't pass");
