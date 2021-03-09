@@ -114,24 +114,41 @@ describe("OpCode Flow Control", () => {
     ));
 });
 
-describe("OpCode Stack", () => {});
+describe("OpCode Stack", () => {
+  it("OP_TOALTSTACK", async () =>
+    await check(
+      "01 OP_TOALTSTACK 02 03 04 OP_TOALTSTACK",
+      "02 03",
+      null,
+      null,
+      "01 04"
+    ));
+
+  it("OP_FROMALTSTACK", async () =>
+    await check(
+      "01 OP_TOALTSTACK 02 03 OP_FROMALTSTACK 04 OP_TOALTSTACK",
+      "02 03 01",
+      null,
+      null,
+      "04"
+    ));
+});
 
 async function check(
   scrToCheck,
-  scrExpected,
-  expectedError = undefined,
-  scrWithStackLikeOpReturn = undefined
+  expectedStack,
+  expectedError = null,
+  expectedReturn = null,
+  expectedAltStack = null
 ) {
   console.log(
     (expectedError
-      ? `Script should fail and produce the same stack as script 2:` +
-        `\n\tExpected Error : ${expectedError}`
-      : `Scripts should evaluate the same:`) +
+      ? `Script should fail with Error : ${expectedError}`
+      : `Scripts should pass`) +
       `\n"${scrToCheck}"` +
-      `\n"${scrExpected}"`
+      `expected stack: "${expectedStack}"`
   );
   const ctxActual = await bitcoinScriptEval(scrToCheck, "asm");
-  const ctxExpected = await bitcoinScriptEval(scrExpected, "asm");
 
   if (expectedError) {
     if (ctxActual.done || !ctxActual.ended)
@@ -148,30 +165,28 @@ async function check(
   }
 
   const valsActual = ctxActual.stack.map((i) => i.toString("hex")).join(" ");
-  const valsExpected = ctxExpected.stack
-    .map((i) => i.toString("hex"))
-    .join(" ");
-  if (valsActual !== valsExpected)
+  if (valsActual !== expectedStack)
     throw new Error(
-      `Assertion failed: Expected \n[${valsActual}]\n to equal \n[${valsExpected}]`
+      `Expected stack [${valsActual}] to equal \n[${expectedStack}]`
     );
 
-  if (scrWithStackLikeOpReturn) {
+  if (expectedReturn) {
     const actualReturn = ctxActual.opReturn
       .map((i) => i.toString("hex"))
       .join(" ");
-
-    const ctxOpReturn = await bitcoinScriptEval(
-      scrWithStackLikeOpReturn,
-      "asm"
-    );
-    const expectedReturn = ctxOpReturn.stack
-      .map((i) => i.toString("hex"))
-      .join(" ");
-
     if (actualReturn !== expectedReturn)
       throw new Error(
         `Expected OpReturn [${actualReturn}] to equal [${expectedReturn}]`
+      );
+  }
+
+  if (expectedAltStack) {
+    const actualAltStack = ctxActual.altStack
+      .map((i) => i.toString("hex"))
+      .join(" ");
+    if (actualAltStack !== expectedAltStack)
+      throw new Error(
+        `Expected alt stack [${actualAltStack}] to equal [${expectedAltStack}]`
       );
   }
 }
