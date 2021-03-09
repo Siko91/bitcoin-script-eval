@@ -716,7 +716,7 @@ function bnToBuf(n) {
 
 function is0(buf) {
   if (buf.length > 1) return false;
-  else if (bud[0] === 0) return true;
+  else if (buf[0] === 0) return true;
   else return false;
 }
 
