@@ -155,11 +155,12 @@ const opCodeFunctions = {
   },
   121: {
     name: "OP_PICK",
-    eval: (ctx) => ctx.stack.push(reverseIndex(ctx.stack, num(pop(ctx.stack)))),
+    eval: (ctx) =>
+      ctx.stack.push(reverseIndex(ctx.stack, uint(pop(ctx.stack)))),
   },
   122: {
     name: "OP_ROLL",
-    eval: (ctx) => ctx.stack.push(pullOut(ctx.stack, num(pop(ctx.stack)))),
+    eval: (ctx) => ctx.stack.push(pullOut(ctx.stack, uint(pop(ctx.stack)))),
   },
   123: {
     name: "OP_ROT",
@@ -191,7 +192,7 @@ const opCodeFunctions = {
     name: "OP_SPLIT",
     eval: (ctx) => {
       const valToSplit = pullOut(ctx.stack, 1);
-      const splitAt = num(pullOut(ctx.stack, 0));
+      const splitAt = uint(pullOut(ctx.stack, 0));
       ctx.stack.push(valToSplit.slice(0, splitAt), valToSplit(splitAt));
     },
   },
@@ -199,7 +200,7 @@ const opCodeFunctions = {
     name: "OP_NUM2BIN",
     eval: (ctx) => {
       const val = cloneBuf(pullOut(ctx.stack, 1));
-      const length = num(pullOut(ctx.stack, 0));
+      const length = uint(pullOut(ctx.stack, 0));
       const bin = numBuf2Bin(val, length);
       ctx.stack.push(bin);
     },
@@ -391,7 +392,7 @@ const opCodeFunctions = {
     name: "OP_LSHIFT",
     eval: (ctx) => {
       const val = pullOut(ctx.stack, 1);
-      const shiftLen = num(pullOut(ctx.stack, 0));
+      const shiftLen = uint(pullOut(ctx.stack, 0));
       const res = lShift(val, shiftLen);
       ctx.stack.push(res);
     },
@@ -400,7 +401,7 @@ const opCodeFunctions = {
     name: "OP_RSHIFT",
     eval: (ctx) => {
       const val = pullOut(ctx.stack, 1);
-      const shiftLen = num(pullOut(ctx.stack, 0));
+      const shiftLen = uint(pullOut(ctx.stack, 0));
       const res = rShift(val, shiftLen);
       ctx.stack.push(res);
     },
@@ -568,8 +569,8 @@ const opCodeFunctions = {
   174: {
     name: "OP_CHECKMULTISIG",
     eval: (ctx) => {
-      const pubCount = num(last(ctx.stack));
-      const sigCount = num(reverseIndex(ctx.stack, pubCount + 1));
+      const pubCount = uint(last(ctx.stack));
+      const sigCount = uint(reverseIndex(ctx.stack, pubCount + 1));
       pullOut(ctx.stack, pubCount + 1 + sigCount + 1); // ignored value
 
       pop(ctx.stack);
@@ -584,8 +585,8 @@ const opCodeFunctions = {
   175: {
     name: "OP_CHECKMULTISIGVERIFY",
     eval: (ctx) => {
-      const pubCount = num(last(ctx.stack));
-      const sigCount = num(reverseIndex(ctx.stack, pubCount + 1));
+      const pubCount = uint(last(ctx.stack));
+      const sigCount = uint(reverseIndex(ctx.stack, pubCount + 1));
       pullOut(ctx.stack, pubCount + 1 + sigCount + 1); // ignored value
 
       pop(ctx.stack);
@@ -662,6 +663,7 @@ function getProtocolVersion(ctx) {
 }
 
 function hex(str) {
+  if (str.length % 2 == 1) str = "0" + str;
   return Buffer.from(str, "hex");
 }
 
@@ -701,11 +703,12 @@ function is0(buf) {
   else return false;
 }
 
-function num(buf) {
+function uint(buf) {
   const n = bufToBn(buf);
   if (n.words.length > 1)
     throw new Error("Value too big - cannot parse to Int");
-  return n.negative ? -n.words[0] : n.words[0];
+  if (n.negative) throw new Error("Value is negative - cannot parse to UInt");
+  return n.words[0];
 }
 
 function numBuf2Bin(numBuf, binLength) {
