@@ -216,6 +216,35 @@ describe("OpCode Bitwise Logic", () => {
   it("!OP_EQUALVERIFY", async () =>
     await check("0101 0303 OP_EQUALVERIFY", "", "Stack values are not equal"));
 });
+describe("OpCode Arithmetic", () => {
+  it("OP_1ADD", async () => await check("01 OP_1ADD", "02"));
+  it("7f OP_1ADD", async () => await check("7f OP_1ADD", "8000"));
+  it("ff7f OP_1ADD", async () => await check("ff7f OP_1ADD", "008000"));
+  it("OP_1SUB", async () => await check("02 OP_1SUB", "01"));
+  it("ff OP_1SUB", async () => await check("ff OP_1SUB", "8080"));
+  it("ffff OP_1SUB", async () => await check("ffff OP_1SUB", "008080"));
+  it("OP_2MUL", async () => await check("02 OP_2MUL", "04"));
+  it("7f OP_2MUL", async () => await check("7f OP_2MUL", "fe00"));
+  it("OP_2DIV", async () => await check("02 OP_2DIV", "01"));
+  it("7f OP_2DIV", async () => await check("7f OP_2DIV", "3f"));
+  it("OP_NEGATE", async () => await check("0502 OP_NEGATE", "0582"));
+  it("-OP_NEGATE", async () => await check("0582 OP_NEGATE", "0502"));
+  it("OP_ABS", async () => await check("0502 OP_ABS", "0502"));
+  it("-OP_ABS", async () => await check("0582 OP_ABS", "0502"));
+  it("OP_NOT", async () => await check("0502 OP_NOT", "00"));
+  it("1 OP_NOT", async () => await check("01 OP_NOT", "00"));
+  it("0 OP_NOT", async () => await check("00 OP_NOT", "01"));
+  it("OP_0NOTEQUAL", async () => await check("0502 OP_0NOTEQUAL", "01"));
+  it("1 OP_0NOTEQUAL", async () => await check("01 OP_0NOTEQUAL", "01"));
+  it("0 OP_0NOTEQUAL", async () => await check("00 OP_0NOTEQUAL", "00"));
+  it("OP_ADD", async () => await check("02 02 OP_ADD", "04"));
+  it("7f 7f OP_ADD", async () => await check("7f 7f OP_ADD", "fe00"));
+  it("OP_SUB", async () => await check("02 01 OP_SUB", "01"));
+  it("01 02 OP_SUB", async () => await check("01 02 OP_SUB", "81"));
+  it("OP_MUL", async () => await check("02 03 OP_MUL", "06"));
+
+  // TODO: Write the rest...
+});
 
 async function check(
   scrToCheck,
