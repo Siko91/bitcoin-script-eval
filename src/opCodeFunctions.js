@@ -96,8 +96,8 @@ const opCodeFunctions = {
   109: {
     name: "OP_2DROP",
     eval: (ctx) => {
-      pop(ctx.stack);
-      pop(ctx.stack);
+      pullOut(ctx.stack, 1);
+      pullOut(ctx.stack, 0);
     },
   },
   110: {
@@ -122,15 +122,15 @@ const opCodeFunctions = {
   113: {
     name: "OP_2ROT",
     eval: (ctx) => {
-      ctx.stack.push(pullOutReverseIndex(ctx.stack, 5)); // 6th on top
-      ctx.stack.push(pullOutReverseIndex(ctx.stack, 5)); // 5th on top of 6th
+      ctx.stack.push(pullOut(ctx.stack, 5)); // 6th on top
+      ctx.stack.push(pullOut(ctx.stack, 5)); // 5th on top of 6th
     },
   },
   114: {
     name: "OP_2SWAP",
     eval: (ctx) => {
-      ctx.stack.push(pullOutReverseIndex(ctx.stack, 3)); // 4th on top
-      ctx.stack.push(pullOutReverseIndex(ctx.stack, 3)); // 3th on top of 4th
+      ctx.stack.push(pullOut(ctx.stack, 3)); // 4th on top
+      ctx.stack.push(pullOut(ctx.stack, 3)); // 3th on top of 4th
     },
   },
   115: {
@@ -146,7 +146,7 @@ const opCodeFunctions = {
   },
   117: { name: "OP_DROP", eval: (ctx) => pop(ctx.stack) },
   118: { name: "OP_DUP", eval: (ctx) => ctx.stack.push(last(ctx.stack)) },
-  119: { name: "OP_NIP", eval: (ctx) => pullOutReverseIndex(ctx.stack, 1) },
+  119: { name: "OP_NIP", eval: (ctx) => pullOut(ctx.stack, 1) },
   120: {
     name: "OP_OVER",
     eval: (ctx) => ctx.stack.push(reverseIndex(ctx.stack, 1)),
@@ -157,22 +157,21 @@ const opCodeFunctions = {
   },
   122: {
     name: "OP_ROLL",
-    eval: (ctx) =>
-      ctx.stack.push(pullOutReverseIndex(ctx.stack, num(pop(ctx.stack)))),
+    eval: (ctx) => ctx.stack.push(pullOut(ctx.stack, num(pop(ctx.stack)))),
   },
   123: {
     name: "OP_ROT",
-    eval: (ctx) => ctx.stack.push(pullOutReverseIndex(ctx.stack, 2)),
+    eval: (ctx) => ctx.stack.push(pullOut(ctx.stack, 2)),
   },
   124: {
     name: "OP_SWAP",
-    eval: (ctx) => ctx.stack.push(pullOutReverseIndex(ctx.stack, 1)),
+    eval: (ctx) => ctx.stack.push(pullOut(ctx.stack, 1)),
   },
   125: {
     name: "OP_TUCK",
     eval: (ctx) => {
-      const top = pop(ctx.stack);
-      const top2 = pop(ctx.stack);
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
       ctx.stack.push(top, top2, top);
     },
   },
@@ -181,24 +180,24 @@ const opCodeFunctions = {
   126: {
     name: "OP_CAT",
     eval: (ctx) => {
-      const top = pop(ctx.stack);
-      const top2 = pop(ctx.stack);
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
       ctx.stack.push(Buffer.concat([top2, top]));
     },
   },
   127: {
     name: "OP_SPLIT",
     eval: (ctx) => {
-      const splitAt = num(pop(ctx.stack));
-      const valToSplit = pop(ctx.stack);
+      const valToSplit = pullOut(ctx.stack, 1);
+      const splitAt = num(pullOut(ctx.stack, 0));
       ctx.stack.push(valToSplit.slice(0, splitAt), valToSplit(splitAt));
     },
   },
   128: {
     name: "OP_NUM2BIN",
     eval: (ctx) => {
-      const length = num(pop(ctx.stack));
-      const val = cloneBuf(pop(ctx.stack));
+      const val = cloneBuf(pullOut(ctx.stack, 1));
+      const length = num(pullOut(ctx.stack, 0));
       const bin = numBuf2Bin(val, length);
       ctx.stack.push(bin);
     },
@@ -231,34 +230,36 @@ const opCodeFunctions = {
   132: {
     name: "OP_AND",
     eval: (ctx) => {
-      const nTop = pop(ctx.stack);
-      const nTop2 = pop(ctx.stack);
-      const res = zipBuf(nTop2, nTop2, (a, b) => a & b);
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
+      const res = zipBuf(top2, top, (a, b) => a & b);
       ctx.stack.push(res);
     },
   },
   133: {
     name: "OP_OR",
     eval: (ctx) => {
-      const nTop = pop(ctx.stack);
-      const nTop2 = pop(ctx.stack);
-      const res = zipBuf(nTop2, nTop2, (a, b) => a | b);
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
+      const res = zipBuf(top2, top, (a, b) => a | b);
       ctx.stack.push(res);
     },
   },
   134: {
     name: "OP_XOR",
     eval: (ctx) => {
-      const nTop = pop(ctx.stack);
-      const nTop2 = pop(ctx.stack);
-      const res = zipBuf(nTop2, nTop2, (a, b) => a ^ b);
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
+      const res = zipBuf(top2, top, (a, b) => a ^ b);
       ctx.stack.push(res);
     },
   },
   135: {
     name: "OP_EQUAL",
     eval: (ctx) => {
-      if (!eq(pop(ctx.stack), pop(ctx.stack))) {
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
+      if (!eq(top2, top)) {
         ctx.stack.push(hex("00"));
       } else {
         ctx.stack.push(hex("01"));
@@ -268,7 +269,9 @@ const opCodeFunctions = {
   136: {
     name: "OP_EQUALVERIFY",
     eval: (ctx) => {
-      if (!eq(pop(ctx.stack), pop(ctx.stack))) {
+      const top2 = pullOut(ctx.stack, 1);
+      const top = pullOut(ctx.stack, 0);
+      if (!eq(top2, top)) {
         throw new Error("Stack values are not equal");
       }
     },
@@ -340,8 +343,8 @@ const opCodeFunctions = {
   147: {
     name: "OP_ADD",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       const n = nTop2.add(nTop);
       ctx.stack.push(bnToBuf(n));
     },
@@ -349,8 +352,8 @@ const opCodeFunctions = {
   148: {
     name: "OP_SUB",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       const n = nTop2.sub(nTop);
       ctx.stack.push(bnToBuf(n));
     },
@@ -358,8 +361,8 @@ const opCodeFunctions = {
   149: {
     name: "OP_MUL",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       const n = nTop2.mul(nTop);
       ctx.stack.push(bnToBuf(n));
     },
@@ -367,8 +370,8 @@ const opCodeFunctions = {
   150: {
     name: "OP_DIV",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       const n = nTop2.div(nTop);
       ctx.stack.push(bnToBuf(n));
     },
@@ -376,8 +379,8 @@ const opCodeFunctions = {
   151: {
     name: "OP_MOD",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       const n = nTop2.div(nTop);
       ctx.stack.push(bnToBuf(n));
     },
@@ -385,115 +388,115 @@ const opCodeFunctions = {
   152: {
     name: "OP_LSHIFT",
     eval: (ctx) => {
-      const shiftLen = num(pop(ctx.stack));
-      const val = pop(ctx.stack);
-      const res = lShift(val);
+      const val = pullOut(ctx.stack, 1);
+      const shiftLen = num(pullOut(ctx.stack, 0));
+      const res = lShift(val, shiftLen);
       ctx.stack.push(res);
     },
   },
   153: {
     name: "OP_RSHIFT",
     eval: (ctx) => {
-      const shiftLen = num(pop(ctx.stack));
-      const val = pop(ctx.stack);
-      const res = rShift(val);
+      const val = pullOut(ctx.stack, 1);
+      const shiftLen = num(pullOut(ctx.stack, 0));
+      const res = rShift(val, shiftLen);
       ctx.stack.push(res);
     },
   },
   154: {
     name: "OP_BOOLAND",
     eval: (ctx) => {
-      const top = !is0(pop(ctx.stack));
-      const top2 = !is0(pop(ctx.stack));
+      const top2 = !is0(pullOut(ctx.stack, 1));
+      const top = !is0(pullOut(ctx.stack, 0));
       ctx.stack.push(top && top2 ? hex("01") : hex("00"));
     },
   },
   155: {
     name: "OP_BOOLOR",
     eval: (ctx) => {
-      const top = !is0(pop(ctx.stack));
-      const top2 = !is0(pop(ctx.stack));
+      const top2 = !is0(pullOut(ctx.stack, 1));
+      const top = !is0(pullOut(ctx.stack, 0));
       ctx.stack.push(top || top2 ? hex("01") : hex("00"));
     },
   },
   156: {
     name: "OP_NUMEQUAL",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.eq(nTop) ? hex("01") : hex("00"));
     },
   },
   157: {
     name: "OP_NUMEQUALVERIFY",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       if (!nTop2.eq(nTop)) throw new Error("Numbers are not equal");
     },
   },
   158: {
     name: "OP_NUMNOTEQUAL",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.eq(nTop) ? hex("00") : hex("01"));
     },
   },
   159: {
     name: "OP_LESSTHAN",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.lt(nTop) ? hex("01") : hex("00"));
     },
   },
   160: {
     name: "OP_GREATERTHAN",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.gt(nTop) ? hex("01") : hex("00"));
     },
   },
   161: {
     name: "OP_LESSTHANOREQUAL",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.leq(nTop) ? hex("01") : hex("00"));
     },
   },
   162: {
     name: "OP_GREATERTHANOREQUAL",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.geq(nTop) ? hex("01") : hex("00"));
     },
   },
   163: {
     name: "OP_MIN",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.leq(nTop) ? bnToBuf(nTop2) : bnToBuf(nTop));
     },
   },
   164: {
     name: "OP_MAX",
     eval: (ctx) => {
-      const nTop = bufToBn(pop(ctx.stack));
-      const nTop2 = bufToBn(pop(ctx.stack));
+      const nTop2 = bufToBn(pullOut(ctx.stack, 1));
+      const nTop = bufToBn(pullOut(ctx.stack, 0));
       ctx.stack.push(nTop2.geq(nTop) ? bnToBuf(nTop2) : bnToBuf(nTop));
     },
   },
   165: {
     name: "OP_WITHIN",
     eval: (ctx) => {
-      const max = bufToBn(pop(ctx.stack));
-      const min = bufToBn(pop(ctx.stack));
-      const x = bufToBn(pop(ctx.stack));
+      const x = bufToBn(pullOut(ctx.stack, 2));
+      const min = bufToBn(pullOut(ctx.stack, 1));
+      const max = bufToBn(pullOut(ctx.stack, 0));
       const geq = x.geq(min);
       const lt = x.lt(max);
       ctx.stack.push(geq && lt ? hex("01") : hex("00"));
@@ -545,8 +548,8 @@ const opCodeFunctions = {
   172: {
     name: "OP_CHECKSIG",
     eval: (ctx) => {
-      const pub = pop(ctx.stack);
-      const sig = pop(ctx.stack);
+      const sig = pullOut(ctx.stack, 1);
+      const pub = pullOut(ctx.stack, 0);
       const sigPass = checkSig(ctx, sig, pub);
       ctx.stack.push(sigPass ? hex("01") : hex("00"));
     },
@@ -554,8 +557,8 @@ const opCodeFunctions = {
   173: {
     name: "OP_CHECKSIGVERIFY",
     eval: (ctx) => {
-      const pub = pop(ctx.stack);
-      const sig = pop(ctx.stack);
+      const sig = pullOut(ctx.stack, 1);
+      const pub = pullOut(ctx.stack, 0);
       const sigPass = checkSig(ctx, sig, pub);
       if (!sigPass) throw new Error("Signature didn't pass");
     },
@@ -796,7 +799,7 @@ function reverseIndex(arr, i) {
   return arr[arr.length - i - 1];
 }
 
-function pullOutReverseIndex(arr, i) {
+function pullOut(arr, i) {
   if (!arr.length) throw new Error("Can't get reverse index in empty array");
   if (i > arr.length - 1) throw new RangeError("Index out of bounds : " + i);
   return arr.splice(arr.length - i - 1, 1);
