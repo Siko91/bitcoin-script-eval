@@ -122,15 +122,17 @@ const opCodeFunctions = {
   113: {
     name: "OP_2ROT",
     eval: (ctx) => {
-      ctx.stack.push(pullOut(ctx.stack, 5)); // 6th on top
-      ctx.stack.push(pullOut(ctx.stack, 5)); // 5th on top of 6th
+      const item6 = pullOut(ctx.stack, 5);
+      const item5 = pullOut(ctx.stack, 4);
+      ctx.stack.push(item6, item5);
     },
   },
   114: {
     name: "OP_2SWAP",
     eval: (ctx) => {
-      ctx.stack.push(pullOut(ctx.stack, 3)); // 4th on top
-      ctx.stack.push(pullOut(ctx.stack, 3)); // 3th on top of 4th
+      const item4 = pullOut(ctx.stack, 3);
+      const item3 = pullOut(ctx.stack, 2);
+      ctx.stack.push(item4, item3);
     },
   },
   115: {
@@ -808,7 +810,7 @@ function reverseIndex(arr, i) {
 function pullOut(arr, i) {
   if (!arr.length) throw new Error("Can't get reverse index in empty array");
   if (i > arr.length - 1) throw new RangeError("Index out of bounds : " + i);
-  return arr.splice(arr.length - i - 1, 1);
+  return arr.splice(arr.length - i - 1, 1)[0];
 }
 
 function eq(buf1, buf2) {
