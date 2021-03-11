@@ -628,11 +628,6 @@ const opCodeFunctions = {
   185: { name: "OP_NOP10", eval: (ctx) => {} },
 };
 
-function calculatePreimageHash(ctx) {
-  // TODO: Implement calculatePreimageHash
-  throw new Error("NOT IMPLEMENTED");
-}
-
 function isSignatureValid(sig, pub, hash) {
   // TODO: Implement isSignatureValid
   throw new Error("NOT IMPLEMENTED");
@@ -642,7 +637,6 @@ function checkSig(ctx, sig, pub) {
   if (ctx.sigsAlwaysPass === true) return true;
   let hash = null;
   if (ctx.txPreimageHash) hash = Buffer.from(ctx.txPreimageHash, "hex");
-  else if (ctx.rawTx && ctx.vin) hash = calculatePreimageHash(ctx);
   else
     throw new Error(
       "Unable to execute Signature check: Unknown txPreimage hash"
@@ -657,7 +651,6 @@ function checkMultiSig(ctx, sigs, sigCount, pubs, pubCount) {
   if (ctx.sigsAlwaysPass === true) return true;
   let hash = null;
   if (ctx.txPreimageHash) hash = Buffer.from(ctx.txPreimageHash, "hex");
-  else if (ctx.rawTx && ctx.vin) hash = calculatePreimageHash(ctx);
   else
     throw new Error(
       "Unable to execute Signature check: Unknown txPreimage hash"

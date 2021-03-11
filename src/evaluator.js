@@ -1,33 +1,34 @@
 const opCodeFunctions = require("./opCodeFunctions");
 
 async function eval(context) {
-  context.stack = context.stack || [];
-  context.altStack = context.altStack || [];
-
   context.done = false;
   context.ended = false;
+  context.step = context.step || 0;
+
+  context.stack = context.stack || [];
+  context.altStack = context.altStack || [];
+  context.opReturn = context.opReturn || [];
+
   for (let i = 0; i < context.script.chunks.length; i++) {
-    context.step = i;
+    context.step++;
     const step = context.script.chunks[i];
 
-    if (context.ended) break;
+    if (context.endedWithOpReturn) {
+      context.opReturn.push(...getOpReturn(context, i));
+      break;
+    }
+    if (context.interrupted) break;
 
     if (context.skipUntil && context.skipUntil.length)
       if (!context.skipUntil.includes(step.opCodeNum)) continue;
 
     await evaluateStep(step, context);
   }
-  const error = checkForErrors(context);
+
   context.ended = true;
-  context.endMessage = context.endMessage || error;
-  context.done = !context.endMessage;
+  context.done = !context.interrupted;
 
   return context;
-}
-
-function checkForErrors(context) {
-  if (context.blocks && context.blocks.length)
-    return "Didn't exit blocks. " + context.blocks.length;
 }
 
 async function evaluateStep(step, context) {
@@ -44,10 +45,7 @@ async function evaluateOpCode(step, context) {
     const opcode = opCodeFunctions[step.opCodeNum];
     opcode.eval(context);
   } catch (error) {
-    if (context.endedWithOpReturn) {
-      context.opReturn = getOpReturn(context, context.step);
-    }
-    context.ended = true;
+    context.interrupted = true;
     context.endMessage = error.message;
   }
 }
