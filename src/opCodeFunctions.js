@@ -400,7 +400,7 @@ const opCodeFunctions = {
     eval: (ctx) => {
       const nTop2 = bufToBn(pullOut(ctx.stack, 1));
       const nTop = bufToBn(pullOut(ctx.stack, 0));
-      const n = nTop2.div(nTop);
+      const n = nTop2.mod(nTop);
       ctx.stack.push(bnToBuf(n));
     },
   },
