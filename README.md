@@ -2,12 +2,16 @@
 
 Evaluates Bitcoin Scripts, according to the specification of Bitcoin SV.
 
-# Usage
+## Install
+
+`npm i --save bitcoin-script-eval`
+
+## Usage
 
 The standard usage is to evaluate a script and examine its result.
 
 ```javascript
-const bitcoinScriptEval = require("bitcoinScriptEval");
+const bitcoinScriptEval = require("bitcoin-script-eval");
 
 bitcoinScriptEval("ff f1 OP_CAT 01 OP_SPLIT", "asm").then((context) => {
   context.stack; // a Buffer array with values [ ff, f1 ]
@@ -22,7 +26,7 @@ bitcoinScriptEval("ff f1 OP_CAT 01 OP_SPLIT", "asm").then((context) => {
 });
 ```
 
-# Execute Step by Step
+## Execute Step by Step
 
 An alternative usage is to split the execution into chunks. This makes it possible to evaluate the state of the script after each chunk.
 
@@ -42,11 +46,11 @@ Here are some rules about splitting scripts into chunks:
 - If a previous chunk did an OP_RETURN, then the next chunk will simply be considered data in the OP_RETURN
 - If a previous chunk had an interruption error, then the next chunk won't actually get executed
 
-# TODO
+## Signatures don't work yet
 
 Some parts of the library are not complete, like signature validation.
 
-As a workaround, set :
+As a workaround, set:
 
 ```javascript
 context.sigsAlwaysPass = true;
@@ -54,8 +58,8 @@ context.sigsAlwaysPass = true;
 
 This will make all Sig opcodes consume the same stack variables, but without checking if the sigs are valid.
 
-`sigsAlwaysPass` is `FALSE` by default.
+> `sigsAlwaysPass` is `FALSE` by default.
 
-# Disclaimer
+## Disclaimer
 
 This code is provided AS-IS, without any warranty. See the license.
