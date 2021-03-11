@@ -60,6 +60,15 @@ This will make all Sig opcodes consume the same stack variables, but without che
 
 > `sigsAlwaysPass` is `FALSE` by default.
 
+## Disabled OpCodes
+
+By default, this tool supports disabled opcodes.
+If you want it to fail on disabled opcodes instead, set:
+
+```javascript
+context.failOnDisabled = true;
+```
+
 ## Disclaimer
 
 This code is provided AS-IS, without any warranty. See the license.
