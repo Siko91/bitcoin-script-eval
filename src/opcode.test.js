@@ -216,6 +216,7 @@ describe("OpCode Bitwise Logic", () => {
   it("!OP_EQUALVERIFY", async () =>
     await check("0101 0303 OP_EQUALVERIFY", "", "Stack values are not equal"));
 });
+
 describe("OpCode Arithmetic", () => {
   it("OP_1ADD", async () => await check("01 OP_1ADD", "02"));
   it("7f OP_1ADD", async () => await check("7f OP_1ADD", "8000"));
@@ -242,8 +243,143 @@ describe("OpCode Arithmetic", () => {
   it("OP_SUB", async () => await check("02 01 OP_SUB", "01"));
   it("01 02 OP_SUB", async () => await check("01 02 OP_SUB", "81"));
   it("OP_MUL", async () => await check("02 03 OP_MUL", "06"));
-
-  // TODO: Write the rest...
+  it("ffffff 02 OP_MUL", async () =>
+    await check("ffffff 02 OP_MUL", "feffff80"));
+  it("ffffff 82 OP_MUL", async () =>
+    await check("ffffff 82 OP_MUL", "feffff00"));
+  it("OP_DIV", async () => await check("06 03 OP_DIV", "02"));
+  it("07 03 OP_DIV", async () => await check("07 03 OP_DIV", "02"));
+  it("ffffff 02 OP_DIV", async () => await check("ffffff 02 OP_DIV", "ffffbf"));
+  it("ffffff 82 OP_DIV", async () => await check("ffffff 82 OP_DIV", "ffff3f"));
+  it("OP_MOD", async () => await check("07 03 OP_MOD", "01"));
+  it("ffff OP_MOD", async () => await check("fffffffe ffff OP_MOD", "00fe"));
+  it("OP_LSHIFT", async () => await check("000080 01 OP_LSHIFT", "000100"));
+  it("2 OP_LSHIFT", async () => await check("ffffff 02 OP_LSHIFT", "fffffc"));
+  it("12 OP_LSHIFT", async () => await check("ffffff 0c OP_LSHIFT", "fff000"));
+  it("5462725afe7647d2 OP_LSHIFT", async () =>
+    await check("5462725afe7647d2 02 OP_LSHIFT", "5189c96bf9d91f48"));
+  it("OP_RSHIFT", async () => await check("010000 01 OP_RSHIFT", "008000"));
+  it("2 OP_RSHIFT", async () => await check("ffffff 02 OP_RSHIFT", "3fffff"));
+  it("12 OP_RSHIFT", async () => await check("ffffff 0c OP_RSHIFT", "000fff"));
+  it("5462725afe7647d2 OP_RSHIFT", async () =>
+    await check("5462725afe7647d2 02 OP_RSHIFT", "15189c96bf9d91f4"));
+  it("OP_BOOLAND", async () =>
+    await check(
+      "01 01 OP_BOOLAND 00 01 OP_BOOLAND 01 00 OP_BOOLAND 00 00 OP_BOOLAND",
+      "01 00 00 00"
+    ));
+  it("ffff OP_BOOLAND", async () =>
+    await check(
+      "ffff ffff OP_BOOLAND 00 ffff OP_BOOLAND ffff 00 OP_BOOLAND",
+      "01 00 00"
+    ));
+  it("OP_BOOLOR", async () =>
+    await check(
+      "01 01 OP_BOOLOR 00 01 OP_BOOLOR 01 00 OP_BOOLOR 00 00 OP_BOOLOR",
+      "01 01 01 00"
+    ));
+  it("ffff OP_BOOLOR", async () =>
+    await check(
+      "ffff ffff OP_BOOLOR 00 ffff OP_BOOLOR ffff 00 OP_BOOLOR",
+      "01 01 01"
+    ));
+  it("OP_NUMEQUAL", async () =>
+    await check(
+      "01 01 OP_NUMEQUAL 00 01 OP_NUMEQUAL 01 00 OP_NUMEQUAL 00 00 OP_NUMEQUAL",
+      "01 00 00 01"
+    ));
+  it("ffff OP_NUMEQUAL", async () =>
+    await check(
+      "ffff ffff OP_NUMEQUAL 01 ffff OP_NUMEQUAL ffff 01 OP_NUMEQUAL",
+      "01 00 00"
+    ));
+  it("01 OP_NUMEQUALVERIFY", async () =>
+    await check("01 01 OP_NUMEQUALVERIFY", ""));
+  it("ff OP_NUMEQUALVERIFY", async () =>
+    await check("ff ff OP_NUMEQUALVERIFY", ""));
+  it("01 02 OP_NUMEQUALVERIFY", async () =>
+    await check("01 02 OP_NUMEQUALVERIFY", "", "Numbers are not equal"));
+  it("02 01 OP_NUMEQUALVERIFY", async () =>
+    await check("02 01 OP_NUMEQUALVERIFY", "", "Numbers are not equal"));
+  it("OP_NUMNOTEQUAL", async () =>
+    await check(
+      "01 01 OP_NUMNOTEQUAL 00 01 OP_NUMNOTEQUAL 01 00 OP_NUMNOTEQUAL 00 00 OP_NUMNOTEQUAL",
+      "00 01 01 00"
+    ));
+  it("ffff OP_NUMNOTEQUAL", async () =>
+    await check(
+      "ffff ffff OP_NUMNOTEQUAL 01 ffff OP_NUMNOTEQUAL ffff 01 OP_NUMNOTEQUAL",
+      "00 01 01"
+    ));
+  it("OP_LESSTHAN", async () =>
+    await check(
+      "02 02 OP_LESSTHAN 01 02 OP_LESSTHAN 02 01 OP_LESSTHAN",
+      "00 01 00"
+    ));
+  it("0f81 OP_LESSTHAN", async () =>
+    await check(
+      "0f81 0f81 OP_LESSTHAN 01 0f81 OP_LESSTHAN 0f81 01 OP_LESSTHAN",
+      "00 00 01"
+    ));
+  it("OP_GREATERTHAN", async () =>
+    await check(
+      "02 02 OP_GREATERTHAN 01 02 OP_GREATERTHAN 02 01 OP_GREATERTHAN",
+      "00 00 01"
+    ));
+  it("0f81 OP_GREATERTHAN", async () =>
+    await check(
+      "0f81 0f81 OP_GREATERTHAN 01 0f81 OP_GREATERTHAN 0f81 01 OP_GREATERTHAN",
+      "00 01 00"
+    ));
+  it("OP_LESSTHANOREQUAL", async () =>
+    await check(
+      "02 02 OP_LESSTHANOREQUAL 01 02 OP_LESSTHANOREQUAL 02 01 OP_LESSTHANOREQUAL",
+      "01 01 00"
+    ));
+  it("0f81 0P_LESSTHAN", async () =>
+    await check(
+      "0f81 0f81 OP_LESSTHANOREQUAL 01 0f81 OP_LESSTHANOREQUAL 0f81 01 OP_LESSTHANOREQUAL",
+      "01 00 01"
+    ));
+  it("OP_GREATERTHANOREQUAL", async () =>
+    await check(
+      "02 02 OP_GREATERTHANOREQUAL 01 02 OP_GREATERTHANOREQUAL 02 01 OP_GREATERTHANOREQUAL",
+      "01 00 01"
+    ));
+  it("0f81 OP_GREATERTHANOREQUAL", async () =>
+    await check(
+      "0f81 0f81 OP_GREATERTHANOREQUAL 01 0f81 OP_GREATERTHANOREQUAL 0f81 01 OP_GREATERTHANOREQUAL",
+      "01 01 00"
+    ));
+  it("OP_MIN", async () =>
+    await check("02 02 OP_MIN 01 02 OP_MIN 02 01 OP_MIN", "02 01 01"));
+  it("0f81 OP_MIN", async () =>
+    await check(
+      "0f81 0f81 OP_MIN 01 0f81 OP_MIN 0f81 01 OP_MIN",
+      "0f81 0f81 0f81"
+    ));
+  it("OP_MAX", async () =>
+    await check("02 02 OP_MAX 01 02 OP_MAX 02 01 OP_MAX", "02 02 02"));
+  it("0f81 OP_MAX", async () =>
+    await check(
+      "0f81 0f81 OP_MAX 01 0f81 OP_MAX 0f81 01 OP_MAX",
+      "0f81 01 01"
+    ));
+  it("OP_WITHIN", async () =>
+    await check(
+      "01 00 02 OP_WITHIN 01 01 02 OP_WITHIN 02 01 02 OP_WITHIN",
+      "01 01 00"
+    ));
+  it("x 08 04 OP_WITHIN", async () =>
+    await check(
+      "06 08 04 OP_WITHIN 0f 08 04 OP_WITHIN 02 08 04 OP_WITHIN",
+      "00 00 00"
+    ));
+  it("0f81 OP_WITHIN", async () =>
+    await check(
+      "0f81 0f81 0e81 OP_WITHIN 01 0f81 02 OP_WITHIN 81 0f81 02 OP_WITHIN",
+      "01 01 01"
+    ));
 });
 
 async function check(
