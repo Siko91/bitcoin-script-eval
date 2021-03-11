@@ -382,6 +382,40 @@ describe("OpCode Arithmetic", () => {
     ));
 });
 
+describe("OpCode Hashing", () => {
+  it("OP_RIPEMD160", async () =>
+    await check(
+      "abcdef OP_RIPEMD160",
+      "a3335a6ee4a6da99932aeee33423dd9afe8623d7"
+    ));
+  it("OP_SHA1", async () =>
+    await check("abcdef OP_SHA1", "3cd5ee7905a100fa498c33f3790bde291df4b585"));
+  it("OP_SHA256", async () =>
+    await check(
+      "abcdef OP_SHA256",
+      "995da3cf545787d65f9ced52674e92ee8171c87c7a4008aa4349ec47d21609a7"
+    ));
+  it("OP_HASH160", async () =>
+    await check(
+      "abcdef OP_HASH160",
+      "d5fce02241deb9fff5f7085e5b92f7fb770f2f55"
+    ));
+  it("OP_HASH256", async () =>
+    await check(
+      "abcdef OP_HASH256",
+      "4533a01d26697df306b3380e08f4fae30f488d2985e6449e9bd9bd86849ddbc6"
+    ));
+});
+
+describe("OpCode Signing", () => {
+  it("OP_CODESEPARATOR", async () =>
+    await check("01 OP_CODESEPARATOR 02", "01 02"));
+
+  // TODO: check how OP_CODESEPARATOR changes the signed hash
+
+  // TODO: test signing OP Codes
+});
+
 async function check(
   scrToCheck,
   expectedStack,
