@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha 'src/**/*.test.js'"
+    "test": "mocha 'src/**/*.test.js'",
+    "browserify": "browserify index.js >> ./dist/bitcoinScriptEval.js"
   },
   "author": "Aleksandar Dinkov",
   "license": "MIT",
@@ -12,6 +13,7 @@
     "bsv": "^2.0.5"
   },
   "devDependencies": {
+    "browserify": "^17.0.0",
     "mocha": "^8.3.1"
   }
 }
